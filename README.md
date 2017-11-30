@@ -104,7 +104,7 @@ deb包中，主程序在/usr/bin下，路由表文件会被安装到/usr/share/g
 * logfile: log文件路径，留空表示输出到stdout。在deb包中建议留空，用init脚本的机制来生成日志文件。
 * loglevel: 日志级别，必须设定。支持EMERG/ALERT/CRIT/ERROR/WARNING/NOTICE/INFO/DEBUG。
 * adminiface: 服务器端的控制端口，可以看到服务器端有多少个连接，分别是谁。
-* dnsnet: dns的网络模式，支持四个选项，udp/tcp/https/internal。默认为udp模式，可选用tcp模式。设定为https采用google dns-over-https。以上三种均为直接连接。使用internal模式时，dns查询和回复会被搭载到msocks的连接上，发给服务器完成。internal模式仅能在client采用，服务器端仅采用https模式。因为只有https模式支持edns-client-subnet功能。
+* dnsnet: dns的网络模式，支持四个选项，udp/tcp/https/internal。默认为udp模式，可选用tcp模式。设定为https采用google dns-over-https。以上三种均为直接连接。使用internal模式时，dns查询和回复会被搭载到msocks的连接上，发给服务器完成。internal模式仅能在client采用。internal模式的服务器端默认采用https模式，因为只有https模式支持edns-client-subnet功能。但是可以采用udp来设定启用udp模式。
 * dnsaddrs: dns查询的目标地址列表。如不定义则采用系统自带的dns系统，会读取默认配置并使用。
 
 在服务器模式和http模式下各有一些额外项目可配置，这些配置和上面的配置是平级的。

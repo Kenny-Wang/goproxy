@@ -36,7 +36,7 @@ func LoadServerConfig(basecfg *Config) (cfg *ServerConfig, err error) {
 }
 
 func RunServer(cfg *ServerConfig) (err error) {
-	dns.RegisterService()
+	dns.RegisterService(cfg.Config.DnsNet, cfg.Config.DnsAddrs)
 
 	listener, err := net.Listen("tcp4", cfg.Listen)
 	if err != nil {
