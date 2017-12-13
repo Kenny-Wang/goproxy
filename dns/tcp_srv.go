@@ -103,12 +103,14 @@ func appendEdns0Subnet(m *dns.Msg, addr net.IP) {
 	}
 }
 
-func RegisterService(dnsnet string, dnsaddrs []string) {
+func RegisterService(dnsnet string, dnsaddrs []string) (err error) {
 	var xchg Exchanger
-	var err error
 
 	switch dnsnet {
 	case "udp", "tcp":
+		if len(dnsaddrs) == 0 {
+			return ErrNoDnsServers
+		}
 		xchg = NewDns(dnsaddrs, dnsnet)
 	default:
 		xchg, err = NewHttpsDns(nil)
@@ -117,8 +119,14 @@ func RegisterService(dnsnet string, dnsaddrs []string) {
 			return
 		}
 	}
+
+	if xchg == nil {
+		return ErrUnknown
+	}
+
 	server := &TcpServer{
 		Exchanger: xchg,
 	}
 	tunnel.RegisterNetwork("dns", server)
+	return
 }

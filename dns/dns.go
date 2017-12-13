@@ -15,6 +15,8 @@ var (
 
 var (
 	ErrMessageTooLarge = errors.New("message body too large")
+	ErrNoDnsServers    = errors.New("no dns servers")
+	ErrUnknown         = errors.New("unknown error")
 )
 
 type Resolver interface {
