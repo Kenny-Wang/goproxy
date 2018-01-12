@@ -1,6 +1,7 @@
 package netutil
 
 import (
+	"errors"
 	"io"
 	"net"
 	"sync"
@@ -10,7 +11,8 @@ import (
 )
 
 var (
-	logger = logging.MustGetLogger("sutils")
+	logger         = logging.MustGetLogger("sutils")
+	ErrFalseDialer = errors.New("not allow to dail")
 )
 
 var (
@@ -69,3 +71,16 @@ func (td *Tcp4Dialer) DialTimeout(network, address string, timeout time.Duration
 }
 
 var DefaultTcp4Dialer TimeoutDialer = &Tcp4Dialer{}
+
+type FalseDialer struct {
+}
+
+func (fd *FalseDialer) Dial(network, address string) (net.Conn, error) {
+	return nil, ErrFalseDialer
+}
+
+func (fd *FalseDialer) DialTimeout(network, address string, timeout time.Duration) (net.Conn, error) {
+	return nil, ErrFalseDialer
+}
+
+var DefaultFalseDialer TimeoutDialer = &FalseDialer{}

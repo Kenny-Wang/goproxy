@@ -12,7 +12,7 @@ func TestTcpTunnel(t *testing.T) {
 	var wg sync.WaitGroup
 	tunnel.SetLogging()
 
-	RegisterService()
+	RegisterService("udp", []string{"114.114.114.114:53"})
 
 	wg.Add(1)
 	go func() {

@@ -28,7 +28,8 @@ type ServerDefine struct {
 
 type ClientConfig struct {
 	Config
-	Blackfile string
+	DirectRoutes     string
+	ProhibitedRoutes string
 
 	MinSess int
 	MaxConn int
@@ -106,14 +107,25 @@ func RunHttproxy(cfg *ClientConfig) (err error) {
 		go httpserver(cfg.AdminIface, mux)
 	}
 
-	if cfg.Blackfile != "" {
+	if cfg.DirectRoutes != "" || cfg.ProhibitedRoutes != "" {
 		fdialer := ipfilter.NewFilteredDialer(dialer)
-		err = fdialer.LoadFilter(netutil.DefaultTcpDialer, cfg.Blackfile)
-		if err != nil {
-			logger.Error("%s", err.Error())
-			return
-		}
 		dialer = fdialer
+
+		if cfg.DirectRoutes != "" {
+			err = fdialer.LoadFilter(netutil.DefaultTcpDialer, cfg.DirectRoutes)
+			if err != nil {
+				logger.Error("%s", err.Error())
+				return
+			}
+		}
+
+		if cfg.ProhibitedRoutes != "" {
+			err = fdialer.LoadFilter(netutil.DefaultFalseDialer, cfg.ProhibitedRoutes)
+			if err != nil {
+				logger.Error("%s", err.Error())
+				return
+			}
+		}
 	}
 
 	// FIXME: port mapper?

@@ -55,8 +55,8 @@ func TestGoproxy(t *testing.T) {
 			AdminIface: "127.0.0.1:5235",
 			DnsNet:     "internal",
 		},
-		DnsServer: "127.0.0.1:5236",
-		Blackfile: AbsPath("../debian/routes.list.gz"),
+		DnsServer:    "127.0.0.1:5236",
+		DirectRoutes: AbsPath("../debian/routes.list.gz"),
 	}
 	srvdesc := ServerDefine{
 		CryptMode:   "tls",
