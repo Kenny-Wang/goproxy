@@ -22,7 +22,7 @@ build:
 	rm -rf gopath
 
 clean:
-	rm -rf bin pkg gopath
+	rm -rf bin pkg gopath debuild
 
 build-tar: build
 	strip bin/goproxy
