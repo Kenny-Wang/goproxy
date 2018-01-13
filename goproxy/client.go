@@ -111,16 +111,17 @@ func RunHttproxy(cfg *ClientConfig) (err error) {
 		fdialer := ipfilter.NewFilteredDialer(dialer)
 		dialer = fdialer
 
-		if cfg.DirectRoutes != "" {
-			err = fdialer.LoadFilter(netutil.DefaultTcpDialer, cfg.DirectRoutes)
+		// push first, work first. prohibited should been setup at first.
+		if cfg.ProhibitedRoutes != "" {
+			err = fdialer.LoadFilter(netutil.DefaultFalseDialer, cfg.ProhibitedRoutes)
 			if err != nil {
 				logger.Error("%s", err.Error())
 				return
 			}
 		}
 
-		if cfg.ProhibitedRoutes != "" {
-			err = fdialer.LoadFilter(netutil.DefaultFalseDialer, cfg.ProhibitedRoutes)
+		if cfg.DirectRoutes != "" {
+			err = fdialer.LoadFilter(netutil.DefaultTcpDialer, cfg.DirectRoutes)
 			if err != nil {
 				logger.Error("%s", err.Error())
 				return
