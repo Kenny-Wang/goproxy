@@ -30,8 +30,8 @@ build-tar: build
 
 build-deb: download
 	dpkg-buildpackage
-	mkdir debuild
-	mv ../goproxy_* debuild
+	mkdir -p debuild
+	mv -f ../goproxy_* debuild
 
 test:
 	go test github.com/shell909090/goproxy/tunnel
