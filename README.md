@@ -156,7 +156,7 @@ http模式运行在本地，需要一个境外的server服务器做支撑，对�
 * httpuser: 客户端访问此http代理服务时的用户名。表示需要验证客户端身份。
 * httppassword: 客户端访问此http代理服务时的密码。
 * portmaps: 端口映射配置，将本地端口映射到远程任意一个端口。
-* dnserver: 一个UDP端口。在此端口提供dns服务。服务会通过dnsnet里设定的模式去查询。此功能尚未提供。
+* dnsserver: 一个UDP端口。在此端口提供dns服务。服务会通过dnsnet里设定的模式去查询。此功能尚未提供。
 
 其中servers是一个列表，成员定义如下：
 
