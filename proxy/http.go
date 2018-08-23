@@ -1,6 +1,7 @@
 package proxy
 
 import (
+	"encoding/base64"
 	"io"
 	"net/http"
 	"strings"
@@ -22,22 +23,22 @@ var hopHeaders = []string{
 	"Upgrade",
 }
 
-type Proxy struct {
+type HttpProxy struct {
 	transport http.Transport
 	dialer    netutil.Dialer
 	username  string
 	password  string
 }
 
-func NewProxy(dialer netutil.Dialer, username string, password string) (p *Proxy) {
-	p = &Proxy{
+func NewHttpProxy(dialer netutil.Dialer, username string, password string) (p *HttpProxy) {
+	p = &HttpProxy{
 		username:  username,
 		password:  password,
 		dialer:    dialer,
 		transport: http.Transport{Dial: dialer.Dial},
 	}
 	if username != "" && password != "" {
-		logger.Info("proxy-auth required")
+		logger.Info("http proxy auth required")
 	}
 	return
 }
@@ -50,7 +51,26 @@ func copyHeader(dst, src http.Header) {
 	}
 }
 
-func (p *Proxy) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+func BasicAuth(w http.ResponseWriter, r *http.Request, username string, password string) bool {
+	pheader := r.Header["Proxy-Authorization"]
+	if pheader == nil || len(pheader) == 0 {
+		return false
+	}
+
+	auth := strings.SplitN(pheader[0], " ", 2)
+	if len(auth) != 2 || auth[0] != "Basic" {
+		return false
+	}
+
+	payload, _ := base64.StdEncoding.DecodeString(auth[1])
+	pair := strings.SplitN(string(payload), ":", 2)
+	if len(pair) != 2 {
+		return false
+	}
+	return pair[0] == username && pair[1] == password
+}
+
+func (p *HttpProxy) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	logger.Infof("http: %s %s", req.Method, req.URL)
 
 	if p.username != "" && p.password != "" {
@@ -95,7 +115,7 @@ func (p *Proxy) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	return
 }
 
-func (p *Proxy) Connect(w http.ResponseWriter, r *http.Request) {
+func (p *HttpProxy) Connect(w http.ResponseWriter, r *http.Request) {
 	hij, ok := w.(http.Hijacker)
 	if !ok {
 		logger.Error("httpserver does not support hijacking")
