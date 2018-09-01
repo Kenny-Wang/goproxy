@@ -14,6 +14,8 @@ import (
 	"github.com/shell909090/goproxy/tunnel"
 )
 
+// TODO: should have some test case for socks
+
 func AbsPath(i string) (o string) {
 	o, _ = filepath.Abs(i)
 	return
@@ -55,8 +57,8 @@ func TestGoproxy(t *testing.T) {
 			AdminIface: "127.0.0.1:5235",
 			DnsNet:     "internal",
 		},
-		DnsServer: "127.0.0.1:5236",
-		Blackfile: AbsPath("../debian/routes.list.gz"),
+		DnsServer:    "127.0.0.1:5236",
+		DirectRoutes: AbsPath("../debian/routes.list.gz"),
 	}
 	srvdesc := ServerDefine{
 		CryptMode:   "tls",
@@ -68,7 +70,7 @@ func TestGoproxy(t *testing.T) {
 	clicfg.Servers = append(clicfg.Servers, &srvdesc)
 
 	go func() {
-		err := RunHttproxy(&clicfg)
+		err := RunClientProxy(&clicfg)
 		if err != nil {
 			t.Error(err)
 			return

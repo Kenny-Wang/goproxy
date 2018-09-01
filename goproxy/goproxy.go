@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	stdlog "log"
@@ -12,6 +13,10 @@ import (
 )
 
 var logger = logging.MustGetLogger("")
+
+var (
+	ErrConfig = errors.New("config error")
+)
 
 var (
 	ConfigFile string
@@ -99,10 +104,13 @@ func main() {
 			return
 		}
 	case "udp", "tcp":
-		if len(basecfg.DnsAddrs) > 0 {
-			dns.DefaultResolver = dns.NewDns(
-				basecfg.DnsAddrs, basecfg.DnsNet)
+		if len(basecfg.DnsAddrs) == 0 {
+			err = ErrConfig
+			logger.Error(err.Error())
+			return
 		}
+		dns.DefaultResolver = dns.NewDns(
+			basecfg.DnsAddrs, basecfg.DnsNet)
 	}
 
 	switch basecfg.Mode {
@@ -117,8 +125,8 @@ func main() {
 
 		err = RunServer(cfg)
 
-	case "http":
-		logger.Notice("http mode start.")
+	case "client":
+		logger.Notice("client mode start.")
 
 		var cfg *ClientConfig
 		cfg, err = LoadClientConfig(basecfg)
@@ -126,7 +134,7 @@ func main() {
 			break
 		}
 
-		err = RunHttproxy(cfg)
+		err = RunClientProxy(cfg)
 
 	default:
 		logger.Info("unknown mode")
@@ -135,5 +143,5 @@ func main() {
 	if err != nil {
 		logger.Error("%s", err)
 	}
-	logger.Info("server stopped")
+	logger.Info("goproxy stopped")
 }

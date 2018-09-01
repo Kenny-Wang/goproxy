@@ -15,9 +15,9 @@
   * [Config and Path](#config-and-path)
   * [Server Config](#server-config)
   * [Server Example](#server-example)
-  * [HTTP Config](#http-config)
-  * [HTTP Example](#http-example)
-  * [Blackfile](#blackfile)
+  * [Client Config](#client-config)
+  * [Client Example](#client-example)
+  * [Direct Routes](#direct-routes)
   * [Port Mapping](#port-mapping)
   * [Key Generation](#key-generation)
   * [Certification Config and Test](#certification-config-and-test)
@@ -99,13 +99,18 @@ deb包中，主程序在/usr/bin下，路由表文件会被安装到/usr/share/g
 
 配置文件内使用json格式，其中可以指定以下内容：
 
-* mode: 运行模式，可以为server/http/留空。留空是个特殊模式，表示不要启动。
+* mode: 运行模式，可以为server/client/留空。留空是个特殊模式，表示不要启动。
 * listen: 监听地址，一般是:port，表示监听所有interface的该端口。
 * logfile: log文件路径，留空表示输出到stdout。在deb包中建议留空，用init脚本的机制来生成日志文件。
 * loglevel: 日志级别，必须设定。支持EMERG/ALERT/CRIT/ERROR/WARNING/NOTICE/INFO/DEBUG。
 * adminiface: 服务器端的控制端口，可以看到服务器端有多少个连接，分别是谁。
-* dnsnet: dns的网络模式，支持四个选项，udp/tcp/https/internal。默认为udp模式，可选用tcp模式。设定为https采用google dns-over-https。以上三种均为直接连接。使用internal模式时，dns查询和回复会被搭载到msocks的连接上，发给服务器完成。internal模式仅能在client采用，服务器端仅采用https模式。因为只有https模式支持edns-client-subnet功能。
-* dnsaddrs: dns查询的目标地址列表。如不定义则采用系统自带的dns系统，会读取默认配置并使用。
+* dnsnet: dns的网络模式，支持四个选项，udp/tcp/https/internal。
+  * 默认：不做任何设定时采用系统自带的dns系统，会读取默认配置并使用。
+  * udp：采用udp查询模式，会使用dnsaddrs里设定的地址作为查询目标。
+  * tcp：同udp，但采用tcp连接。
+  * https：采用google dns-over-https，支持edns-client-subnet。
+  * internal：使用该模式时，dns查询和回复会被搭载到msocks的连接上，发给服务器完成。internal模式仅能在client采用。internal模式的服务器端默认采用https模式，因为只有https模式支持edns-client-subnet功能。但是可以采用udp来设定启用udp模式。
+* dnsaddrs: dns查询的目标地址列表，需要带端口。当dnsnet为udp或tcp时必须设定，否则报错。
 
 在服务器模式和http模式下各有一些额外项目可配置，这些配置和上面的配置是平级的。
 
@@ -139,18 +144,22 @@ deb包中，主程序在/usr/bin下，路由表文件会被安装到/usr/share/g
 	    "certkeyfile": "./privkey.pem"
 	}
 
-## HTTP Config
+## Client Config
 
-http模式运行在本地，需要一个境外的server服务器做支撑，对内提供http代理。
+client模式运行在本地，需要一个境外的server服务器做支撑，对内提供http/socks5代理。
 
-* blackfile: 黑名单文件，http模式下可选。
+* directroutes: 直连路由文件，client模式下可选。
+* prohibitedroutes: 禁止路由文件，client模式下可选。本文件所列出路由会连接失败。
 * minsess: 最小session数，默认为1。
 * maxconn: 一个session的最大connection数，超过这个数值会启动新session。默认为64。
 * servers: 服务器列表。
-* httpuser: 客户端访问此http代理服务时的用户名。表示需要验证客户端身份。
+* httpuser: 客户端访问此http代理服务时的用户名。留空表示无需验证客户身份。
 * httppassword: 客户端访问此http代理服务时的密码。
+* socks: socks5代理的监听地址。留空表示不启动。
+* socksuser: 客户端访问此socks5代理服务时的用户名。留空表示无需验证客户身份。
+* sockspassword: 客户端访问此socks5代理服务时的密码。
 * portmaps: 端口映射配置，将本地端口映射到远程任意一个端口。
-* dnserver: 一个UDP端口。在此端口提供dns服务。服务会通过dnsnet里设定的模式去查询。此功能尚未提供。
+* dnsserver: 一个UDP端口。在此端口提供dns服务。服务会通过dnsnet里设定的模式去查询。此功能尚未提供。
 
 其中servers是一个列表，成员定义如下：
 
@@ -170,10 +179,10 @@ http模式运行在本地，需要一个境外的server服务器做支撑，对�
 * src: 源地址。
 * dst: 目标地址。
 
-## HTTP Example
+## Client Example
 
 	{
-		"mode": "http",
+		"mode": "client",
 		"listen": ":5233",
 	 
 		"loglevel": "WARNING",
@@ -193,21 +202,21 @@ http模式运行在本地，需要一个境外的server服务器做支撑，对�
 		]
 	}
 
-## Blackfile
+## Direct Routes
 
-黑名单文件是一个路由文件，其中列出的子网将不会由服务器端代理，而是直接连接。这通常用于部分IP不希望通过服务器端的时候。
+直连路由是这样的一个功能。它需要你指定一个路由文件，其中列出的子网将不会由服务器端代理，而是直接连接。这通常用于部分IP不希望通过服务器端的时候。
 
-黑名单文件使用文本格式，每个子网一行。行内以空格分割，第一段为IP地址，第二段为子网掩码。允许使用gzip压缩，后缀名必须为gz，可以直接读取。routes.list.gz为样例。
+路由文件使用文本格式，每个子网一行。行内以空格分割，第一段为IP地址，第二段为子网掩码。允许使用gzip压缩，后缀名必须为gz，可以直接读取。routes.list.gz为样例。
 
 CIDR style ip range definition is acceptable.
 
-## port mapping
+## Port Mapping
 
 通过portmaps项，可以将本地的tcp/udp端口转发到远程任意端口。
 
 注意：尚未测试。
 
-## key generation
+## Key Generation
 
 可以使用以下语句生成，写入两边的config即可。
 

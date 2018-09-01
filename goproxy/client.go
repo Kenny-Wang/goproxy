@@ -28,14 +28,18 @@ type ServerDefine struct {
 
 type ClientConfig struct {
 	Config
-	Blackfile string
+	DirectRoutes     string
+	ProhibitedRoutes string
 
 	MinSess int
 	MaxConn int
 	Servers []*ServerDefine
 
-	HttpUser     string
-	HttpPassword string
+	HttpUser      string
+	HttpPassword  string
+	Socks         string
+	SocksUser     string
+	SocksPassword string
 
 	Portmaps  []portmapper.PortMap
 	DnsServer string
@@ -76,7 +80,7 @@ func (sd *ServerDefine) MakeDialer() (dialer netutil.Dialer, err error) {
 	return
 }
 
-func RunHttproxy(cfg *ClientConfig) (err error) {
+func RunClientProxy(cfg *ClientConfig) (err error) {
 	var dialer netutil.Dialer
 	pool := connpool.NewDialer(cfg.MinSess, cfg.MaxConn)
 
@@ -106,14 +110,26 @@ func RunHttproxy(cfg *ClientConfig) (err error) {
 		go httpserver(cfg.AdminIface, mux)
 	}
 
-	if cfg.Blackfile != "" {
+	if cfg.DirectRoutes != "" || cfg.ProhibitedRoutes != "" {
 		fdialer := ipfilter.NewFilteredDialer(dialer)
-		err = fdialer.LoadFilter(netutil.DefaultTcpDialer, cfg.Blackfile)
-		if err != nil {
-			logger.Error("%s", err.Error())
-			return
-		}
 		dialer = fdialer
+
+		// push first, work first. prohibited should been setup at first.
+		if cfg.ProhibitedRoutes != "" {
+			err = fdialer.LoadFilter(netutil.DefaultFalseDialer, cfg.ProhibitedRoutes)
+			if err != nil {
+				logger.Error(err.Error())
+				return
+			}
+		}
+
+		if cfg.DirectRoutes != "" {
+			err = fdialer.LoadFilter(netutil.DefaultTcpDialer, cfg.DirectRoutes)
+			if err != nil {
+				logger.Error(err.Error())
+				return
+			}
+		}
 	}
 
 	// FIXME: port mapper?
@@ -121,6 +137,12 @@ func RunHttproxy(cfg *ClientConfig) (err error) {
 		go portmapper.CreatePortmap(pm, dialer)
 	}
 
-	p := proxy.NewProxy(dialer, cfg.HttpUser, cfg.HttpPassword)
+	if cfg.Socks != "" {
+		p := proxy.NewSocksProxy(dialer, cfg.Socks, cfg.SocksUser, cfg.SocksPassword)
+		p.Start()
+	}
+
+	p := proxy.NewHttpProxy(dialer, cfg.HttpUser, cfg.HttpPassword)
+	logger.Infof("http start in %s", cfg.Listen)
 	return http.ListenAndServe(cfg.Listen, p)
 }

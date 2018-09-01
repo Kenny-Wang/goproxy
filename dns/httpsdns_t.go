@@ -15,7 +15,6 @@ func TestHttpsDns(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	// httpsdns.MyIP = "114.114.114.114"
 
 	_, err = httpsdns.LookupIP("www.baidu.com")
 	if err != nil {

@@ -6,10 +6,14 @@
 ## X-URL: 
 LEVEL=NOTICE
 
-all: download build
+all: clean build
+
+fullbuild: clean download build
 
 download:
-	go get -u -d github.com/shell909090/goproxy/goproxy
+	go get -u -d github.com/miekg/dns
+	go get -u -d github.com/op/go-logging
+	go get -u -d golang.org/x/net/http2
 
 build:
 	mkdir -p gopath/src/github.com/shell909090/
@@ -19,7 +23,7 @@ build:
 	rm -rf gopath
 
 clean:
-	rm -rf bin pkg gopath
+	rm -rf bin pkg gopath debuild
 
 build-tar: build
 	strip bin/goproxy
@@ -27,14 +31,14 @@ build-tar: build
 
 build-deb: download
 	dpkg-buildpackage
-	mkdir debuild
-	mv ../goproxy_* debuild
+	mkdir -p debuild
+	mv -f ../goproxy_* debuild
 
 test:
 	go test github.com/shell909090/goproxy/tunnel
-	# go test github.com/shell909090/goproxy/dns
+	go test github.com/shell909090/goproxy/dns
 	go test github.com/shell909090/goproxy/ipfilter
-	# go test github.com/shell909090/goproxy/goproxy
+	go test github.com/shell909090/goproxy/goproxy
 
 install: build
 	install -d $(DESTDIR)/usr/bin/
