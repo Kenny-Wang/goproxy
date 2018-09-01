@@ -1,8 +1,15 @@
-goproxy (3.0.1) UNRELEASED; urgency=medium
+goproxy (3.0.2) unstable; urgency=medium
 
-  * add dns server in the client side
+  * add socks5 server.
+  * change client mode name: from "http" to "client".
 
- -- Shell.Xu <shell909090@gmail.com>  Fri, 18 Aug 2017 23:17:32 +0800
+ -- Shell.Xu <shell909090@gmail.com>  Sat, 01 Sep 2018 20:02:27 +0800
+
+goproxy (3.0.1) unstable; urgency=medium
+
+  * add dns server in the client side.
+
+ -- Shell.Xu <shell909090@gmail.com>  Sat, 01 Sep 2018 20:01:48 +0800
 
 goproxy (3.0) unstable; urgency=medium
 

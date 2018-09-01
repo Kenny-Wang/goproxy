@@ -35,8 +35,11 @@ type ClientConfig struct {
 	MaxConn int
 	Servers []*ServerDefine
 
-	HttpUser     string
-	HttpPassword string
+	HttpUser      string
+	HttpPassword  string
+	Socks         string
+	SocksUser     string
+	SocksPassword string
 
 	Portmaps  []portmapper.PortMap
 	DnsServer string
@@ -77,7 +80,7 @@ func (sd *ServerDefine) MakeDialer() (dialer netutil.Dialer, err error) {
 	return
 }
 
-func RunHttproxy(cfg *ClientConfig) (err error) {
+func RunClientProxy(cfg *ClientConfig) (err error) {
 	var dialer netutil.Dialer
 	pool := connpool.NewDialer(cfg.MinSess, cfg.MaxConn)
 
@@ -115,7 +118,7 @@ func RunHttproxy(cfg *ClientConfig) (err error) {
 		if cfg.ProhibitedRoutes != "" {
 			err = fdialer.LoadFilter(netutil.DefaultFalseDialer, cfg.ProhibitedRoutes)
 			if err != nil {
-				logger.Error("%s", err.Error())
+				logger.Error(err.Error())
 				return
 			}
 		}
@@ -123,7 +126,7 @@ func RunHttproxy(cfg *ClientConfig) (err error) {
 		if cfg.DirectRoutes != "" {
 			err = fdialer.LoadFilter(netutil.DefaultTcpDialer, cfg.DirectRoutes)
 			if err != nil {
-				logger.Error("%s", err.Error())
+				logger.Error(err.Error())
 				return
 			}
 		}
@@ -134,6 +137,12 @@ func RunHttproxy(cfg *ClientConfig) (err error) {
 		go portmapper.CreatePortmap(pm, dialer)
 	}
 
-	p := proxy.NewProxy(dialer, cfg.HttpUser, cfg.HttpPassword)
+	if cfg.Socks != "" {
+		p := proxy.NewSocksProxy(dialer, cfg.Socks, cfg.SocksUser, cfg.SocksPassword)
+		p.Start()
+	}
+
+	p := proxy.NewHttpProxy(dialer, cfg.HttpUser, cfg.HttpPassword)
+	logger.Infof("http start in %s", cfg.Listen)
 	return http.ListenAndServe(cfg.Listen, p)
 }

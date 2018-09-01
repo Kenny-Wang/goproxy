@@ -125,8 +125,8 @@ func main() {
 
 		err = RunServer(cfg)
 
-	case "http":
-		logger.Notice("http mode start.")
+	case "client":
+		logger.Notice("client mode start.")
 
 		var cfg *ClientConfig
 		cfg, err = LoadClientConfig(basecfg)
@@ -134,7 +134,7 @@ func main() {
 			break
 		}
 
-		err = RunHttproxy(cfg)
+		err = RunClientProxy(cfg)
 
 	default:
 		logger.Info("unknown mode")
@@ -143,5 +143,5 @@ func main() {
 	if err != nil {
 		logger.Error("%s", err)
 	}
-	logger.Info("server stopped")
+	logger.Info("goproxy stopped")
 }
