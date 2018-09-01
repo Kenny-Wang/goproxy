@@ -8,7 +8,6 @@ import (
 	"io"
 	"net"
 
-	"github.com/ethereum/go-ethereum/log"
 	"github.com/shell909090/goproxy/netutil"
 )
 
@@ -227,7 +226,7 @@ func (p *SocksProxy) SocksHandler(conn net.Conn) (dstconn net.Conn, err error) {
 		}
 		err = SendAuthResult(writer, status)
 		if err != nil {
-			log.Error(err.Error())
+			logger.Error(err.Error())
 			return
 		}
 		if status != 0 {
