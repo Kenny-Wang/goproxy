@@ -14,6 +14,8 @@ import (
 	"github.com/shell909090/goproxy/tunnel"
 )
 
+// TODO: should have some test case for socks
+
 func AbsPath(i string) (o string) {
 	o, _ = filepath.Abs(i)
 	return
@@ -68,7 +70,7 @@ func TestGoproxy(t *testing.T) {
 	clicfg.Servers = append(clicfg.Servers, &srvdesc)
 
 	go func() {
-		err := RunHttproxy(&clicfg)
+		err := RunClientProxy(&clicfg)
 		if err != nil {
 			t.Error(err)
 			return
