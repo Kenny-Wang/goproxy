@@ -6,9 +6,7 @@
 ## X-URL: 
 LEVEL=NOTICE
 
-all: clean build
-
-fullbuild: clean download build
+all: download build
 
 download:
 	go get -u -d github.com/miekg/dns
