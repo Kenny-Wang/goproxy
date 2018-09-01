@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/ethereum/go-ethereum/log"
 	"github.com/shell909090/goproxy/connpool"
 	"github.com/shell909090/goproxy/cryptconn"
 	"github.com/shell909090/goproxy/dns"
@@ -119,7 +118,7 @@ func RunClientProxy(cfg *ClientConfig) (err error) {
 		if cfg.ProhibitedRoutes != "" {
 			err = fdialer.LoadFilter(netutil.DefaultFalseDialer, cfg.ProhibitedRoutes)
 			if err != nil {
-				log.Error(err.Error())
+				logger.Error(err.Error())
 				return
 			}
 		}
@@ -127,7 +126,7 @@ func RunClientProxy(cfg *ClientConfig) (err error) {
 		if cfg.DirectRoutes != "" {
 			err = fdialer.LoadFilter(netutil.DefaultTcpDialer, cfg.DirectRoutes)
 			if err != nil {
-				log.Error(err.Error())
+				logger.Error(err.Error())
 				return
 			}
 		}

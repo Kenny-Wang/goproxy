@@ -10,7 +10,6 @@ all: download build
 
 download:
 	# go get -u -d github.com/shell909090/goproxy/goproxy
-	go get -u -d github.com/armon/go-socks5
 	go get -u -d github.com/miekg/dns
 	go get -u -d github.com/op/go-logging
 	go get -u -d golang.org/x/net/http2
