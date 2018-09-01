@@ -9,7 +9,7 @@ func ListenAndServe(network, address string, handler func(net.Conn)) (err error)
 		return
 	}
 	defer listener.Close()
-	logger.Infof("listen in %s %s", network, address)
+	logger.Debugf("listen in %s %s", network, address)
 
 	var conn net.Conn
 	for {

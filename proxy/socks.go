@@ -8,15 +8,18 @@ import (
 	"io"
 	"net"
 
+	"github.com/ethereum/go-ethereum/log"
 	"github.com/shell909090/goproxy/netutil"
 )
 
 var (
 	ErrProtocol        = errors.New("protocol error")
-	ErrAuthMethod      = errors.New("auth method wrong")
 	ErrWrongFmt        = errors.New("connect packet wrong format")
 	ErrUnknownAddrType = errors.New("unknown addr type")
 	ErrIPv6            = errors.New("ipv6 not support yet")
+	ErrAuthPacket      = errors.New("Auth Packet Error")
+	ErrAuthMethod      = errors.New("auth method wrong")
+	ErrAuthFailed      = errors.New("auth failed")
 )
 
 func readLeadByte(reader io.Reader) (b []byte, err error) {
@@ -72,7 +75,7 @@ func GetUserPass(reader *bufio.Reader) (user string, password string, err error)
 		return
 	}
 	if c != 0x01 {
-		err = errors.New("Auth Packet Error")
+		err = ErrAuthPacket
 		return
 	}
 
@@ -90,7 +93,7 @@ func SendAuthResult(writer *bufio.Writer, status byte) (err error) {
 	buf[1] = status
 	n, err := writer.Write(buf)
 	if n != len(buf) {
-		return errors.New("send buffer full")
+		return io.ErrShortWrite
 	}
 	return writer.Flush()
 }
@@ -179,6 +182,7 @@ func NewSocksProxy(dialer netutil.Dialer, addr, username, password string) (p *S
 }
 
 func (p *SocksProxy) Start() {
+	logger.Infof("socks start in %s", p.listenaddr)
 	go netutil.ListenAndServe("tcp", p.listenaddr, p.ServeConn)
 }
 
@@ -206,15 +210,31 @@ func (p *SocksProxy) SocksHandler(conn net.Conn) (dstconn net.Conn, err error) {
 		return
 	}
 
-	method := byte(0xff)
-	for _, m := range methods {
-		if m == 0 {
-			method = 0
-		}
-	}
-	// TODO: username & password
+	method := p.decideMethod(methods)
 	SendHandshakeResponse(writer, method)
-	if method == 0xff {
+	switch method {
+	case 0x0:
+	case 0x2: // auth by username and password.
+		var username, password string
+		username, password, err = GetUserPass(reader)
+		if err != nil {
+			logger.Error(err.Error())
+			return
+		}
+		status := byte(0x01)
+		if username == p.username && password == p.password {
+			status = 0
+		}
+		err = SendAuthResult(writer, status)
+		if err != nil {
+			log.Error(err.Error())
+			return
+		}
+		if status != 0 {
+			err = ErrAuthFailed
+			return
+		}
+	case 0xff:
 		err = ErrAuthMethod
 		logger.Error(err.Error())
 		return
@@ -238,4 +258,21 @@ func (p *SocksProxy) SocksHandler(conn net.Conn) (dstconn net.Conn, err error) {
 	SendConnectResponse(writer, 0x00)
 
 	return dstconn, nil
+}
+
+func (p *SocksProxy) decideMethod(methods []byte) (method byte) {
+	method = 0
+	if p.username != "" && p.password != "" {
+		method = 2
+	}
+	flag := false
+	for _, m := range methods {
+		if m == method {
+			flag = true
+		}
+	}
+	if !flag {
+		method = 0xff
+	}
+	return
 }
