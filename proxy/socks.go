@@ -246,7 +246,7 @@ func (p *SocksProxy) SocksHandler(conn net.Conn) (dstconn net.Conn, err error) {
 		SendConnectResponse(writer, 0x01)
 		return
 	}
-	logger.Debugf("dst: %s:%d", hostname, port)
+	logger.Debugf("socks5 connect to %s:%d", hostname, port)
 
 	dstconn, err = p.dialer.Dial("tcp", fmt.Sprintf("%s:%d", hostname, port))
 	if err != nil {
