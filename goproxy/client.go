@@ -1,6 +1,7 @@
 package main
 
 import (
+	"net/http"
 	"strings"
 
 	"github.com/shell909090/goproxy/connpool"
@@ -149,26 +150,25 @@ func RunClientProxy(cfg *ClientConfig) (err error) {
 		p.Start(cfg.Transparent)
 	}
 
-	var httpproxy *proxy.HttpProxy
-	if cfg.Http != nil {
-		httpproxy = proxy.NewHttpProxy(dialer, cfg.Http.User, cfg.Http.Pwd)
-	}
-
 	if cfg.Admin != nil && cfg.Admin.Listen != "" {
 		handler := MakeAdminHandler(pool, cfg.Admin.User, cfg.Admin.Pwd)
 		go HttpListenAndServer(cfg.Admin.Listen, handler)
 	}
-	if cfg.Admin != nil && cfg.Admin.Listen == "" {
-		if httpproxy == nil {
-			logger.Critical("try to run admin without http server.")
-			return
-		}
-		// Handler:   http.NewServeMux(),
-		httpproxy.Handler = MakeAdminHandler(pool, cfg.Admin.User, cfg.Admin.Pwd)
-	}
 
-	// p.Mux.HandleFunc("/pac")
+	var httpproxy *proxy.HttpProxy
 	if cfg.Http != nil {
+		httpproxy = proxy.NewHttpProxy(dialer, cfg.Http.User, cfg.Http.Pwd)
+
+		if cfg.Admin != nil && cfg.Admin.Listen == "" {
+			httpproxy.Handler = MakeAdminHandler(
+				pool, cfg.Admin.User, cfg.Admin.Pwd)
+		}
+
+		mux := http.NewServeMux()
+		mux.Handle("/pac.json", proxy.NewDefaultPAC())
+		mux.Handle("/", httpproxy.Handler)
+		httpproxy.Handler = mux
+
 		httpproxy.Start(cfg.Http.Listen)
 	}
 	select {}
