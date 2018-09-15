@@ -140,12 +140,10 @@ deb包中，主程序在/usr/bin下，路由表文件会被安装到/usr/share/g
 
 	{
 		"mode": "server",
-		"listen": ":5233",
-	 
 		"logfile": "",
 		"loglevel": "WARNING",
+		"listen": ":5233",
 		"admin": "127.0.0.1:5234"
-
 	    "forceipv4": true,
 	    "cryptmode": "tls",
 	    "rootcas": "./ca.crt",
