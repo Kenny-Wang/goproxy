@@ -1,16 +1,12 @@
 {
-    "mode": "",
-    "listen": ":5233",
-    "server": "srv:5233",
-
+    "mode": "server",
+    "logfile": "",
     "loglevel": "WARNING",
-
-    "key": "",
-    "blackfile": "/usr/share/goproxy/routes.list.gz",
-
-    "username": "username",
-    "password": "password",
-    "auth": {
-	"username": "password"
-    }
+    "listen": ":5233",
+    "admin": "127.0.0.1:5234"
+    "forceipv4": true,
+    "cryptmode": "tls",
+    "rootcas": "./ca.crt",
+    "certfile": "./fullchain.pem",
+    "certkeyfile": "./privkey.pem"
 }

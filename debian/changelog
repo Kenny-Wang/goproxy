@@ -1,3 +1,9 @@
+goproxy (3.0.3) unstable; urgency=medium
+
+  * add pac support.
+
+ -- Shell.Xu <shell909090@gmail.com>  Sat, 15 Sep 2018 22:05:08 +0800
+
 goproxy (3.0.2) unstable; urgency=medium
 
   * add socks5 server.
