@@ -12,21 +12,19 @@ import (
 const SO_ORIGINAL_DST = 80
 
 type TransparentProxy struct {
-	dialer     netutil.Dialer
-	listenaddr string
+	dialer netutil.Dialer
 }
 
-func NewTransparentProxy(dialer netutil.Dialer, addr string) (tproxy *TransparentProxy) {
+func NewTransparentProxy(dialer netutil.Dialer) (tproxy *TransparentProxy) {
 	tproxy = &TransparentProxy{
-		dialer:     dialer,
-		listenaddr: addr,
+		dialer: dialer,
 	}
 	return
 }
 
-func (tproxy *TransparentProxy) Start() {
-	logger.Infof("transparent start in %s", tproxy.listenaddr)
-	go netutil.ListenAndServe("tcp", tproxy.listenaddr, tproxy.ServeConn)
+func (tproxy *TransparentProxy) Start(addr string) {
+	logger.Infof("transparent start in %s", addr)
+	go netutil.ListenAndServe("tcp", addr, tproxy.ServeConn)
 }
 
 func (tproxy *TransparentProxy) ServeConn(conn net.Conn) {

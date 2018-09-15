@@ -100,10 +100,8 @@ deb包中，主程序在/usr/bin下，路由表文件会被安装到/usr/share/g
 配置文件内使用json格式，其中可以指定以下内容：
 
 * mode: 运行模式，可以为server/client/留空。留空是个特殊模式，表示不要启动。
-* listen: 监听地址，一般是:port，表示监听所有interface的该端口。
 * logfile: log文件路径，留空表示输出到stdout。在deb包中建议留空，用init脚本的机制来生成日志文件。
 * loglevel: 日志级别，必须设定。支持EMERG/ALERT/CRIT/ERROR/WARNING/NOTICE/INFO/DEBUG。
-* adminiface: 服务器端的控制端口，可以看到服务器端有多少个连接，分别是谁。
 * dnsnet: dns的网络模式，支持四个选项，udp/tcp/https/internal。
   * 默认：不做任何设定时采用系统自带的dns系统，会读取默认配置并使用。
   * udp：采用udp查询模式，会使用dnsaddrs里设定的地址作为查询目标。
@@ -119,6 +117,7 @@ deb包中，主程序在/usr/bin下，路由表文件会被安装到/usr/share/g
 服务器模式运行在境外机器上，监听某个端口提供服务。客户端可以连接服务器端，通过他连接目标tcp。
 
 * cryptmode: 字符串。tls表示使用tls模式，其他表示使用PSK模式。
+* listen: 监听地址，一般是:port，表示监听所有interface的该端口。
 * rootcas: 字符串，只在tls模式下生效。以回车分割的多行字符串，每行一个文件路径，表示服务器认可的客户端ca根。不设定的话服务器端不做客户端证书验证。
 * certfile: 字符串，只在tls模式下生效。服务器端使用的证书文件。
 * certkeyfile: 字符串，只在tls模式下生效。服务器端使用的证书密钥。
@@ -126,6 +125,13 @@ deb包中，主程序在/usr/bin下，路由表文件会被安装到/usr/share/g
 * cipher: 加密算法，只在PSK模式下生效。可以为aes/des/tripledes，默认aes。
 * key: 密钥，只在PSK模式下生效。16个随机数据base64后的结果，客户端必须严格匹配方能通讯。
 * auth: dict类型。认证用户名/密码对。不设定表示不验证用户。
+* admin: 管理service，可以看到服务器端有多少个连接，分别是谁。为空表示不启动。不留listen会报错。
+
+其中service定义如下：
+
+* listen: service监听的地址。
+* user: 用户名。用户名密码之一留空表示不验证身份。
+* pwd: 密码。
 
 ## Server Example
 
@@ -153,14 +159,18 @@ client模式运行在本地，需要一个境外的server服务器做支撑，�
 * minsess: 最小session数，默认为1。
 * maxconn: 一个session的最大connection数，超过这个数值会启动新session。默认为64。
 * servers: 服务器列表。
-* httpuser: 客户端访问此http代理服务时的用户名。留空表示无需验证客户身份。
-* httppassword: 客户端访问此http代理服务时的密码。
-* socks: socks5代理的监听地址。留空表示不启动。
-* socksuser: 客户端访问此socks5代理服务时的用户名。留空表示无需验证客户身份。
-* sockspassword: 客户端访问此socks5代理服务时的密码。
+* http: http service，为空表示不启动。
+* admin: 管理service，为空表示不启动。注意，留listen表示启动在独立端口上，不留listen表示混合在http端口上。后者要求http协议开放。
+* socks5: socks5 service，为空表示不启动。
 * transparent: 透明代理的监听地址。留空表示不启动透明代理。
 * portmaps: 端口映射配置，将本地端口映射到远程任意一个端口。
 * dnsserver: 一个UDP端口。在此端口提供dns服务。服务会通过dnsnet里设定的模式去查询。此功能尚未提供。
+
+其中service定义如下：
+
+* listen: service监听的地址。
+* user: 用户名。用户名密码之一留空表示不验证身份。
+* pwd: 密码。
 
 其中servers是一个列表，成员定义如下：
 

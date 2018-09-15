@@ -1,0 +1,38 @@
+package main
+
+import (
+	"net/http"
+
+	logging "github.com/op/go-logging"
+	"github.com/shell909090/goproxy/connpool"
+	"github.com/shell909090/goproxy/proxy"
+)
+
+var logger = logging.MustGetLogger("")
+
+type Service struct {
+	Listen string
+	User   string
+	Pwd    string
+}
+
+func HttpListenAndServer(addr string, handler http.Handler) {
+	for {
+		err := http.ListenAndServe(addr, handler)
+		if err != nil {
+			logger.Error("%s", err.Error())
+			return
+		}
+	}
+}
+
+func MakeAdminHandler(pool *connpool.Dialer, user, pwd string) (handler http.Handler) {
+	mux := http.NewServeMux()
+	pool.Register(mux)
+	if user != "" && pwd != "" {
+		bauth := proxy.NewHttpBasicAuth(mux)
+		bauth.AddUserPass(user, pwd)
+		return bauth
+	}
+	return mux
+}

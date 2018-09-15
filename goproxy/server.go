@@ -14,6 +14,7 @@ import (
 type ServerConfig struct {
 	Config
 	CryptMode   string
+	Listen      string
 	RootCAs     string
 	CertFile    string
 	CertKeyFile string
@@ -21,6 +22,7 @@ type ServerConfig struct {
 	Cipher      string
 	Key         string
 	Auth        map[string]string
+	Admin       *Service
 }
 
 func LoadServerConfig(basecfg *Config) (cfg *ServerConfig, err error) {
@@ -63,10 +65,10 @@ func RunServer(cfg *ServerConfig) (err error) {
 
 	server := connpool.NewServer(&cfg.Auth)
 
-	if cfg.AdminIface != "" {
+	if cfg.Admin != nil {
 		mux := http.NewServeMux()
 		server.Register(mux)
-		go httpserver(cfg.AdminIface, mux)
+		go HttpListenAndServer(cfg.Admin.Listen, mux)
 	}
 
 	return server.Serve(listener)

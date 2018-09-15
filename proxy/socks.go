@@ -161,18 +161,16 @@ func SendConnectResponse(writer *bufio.Writer, res byte) (err error) {
 }
 
 type SocksProxy struct {
-	dialer     netutil.Dialer
-	listenaddr string
-	username   string
-	password   string
+	dialer   netutil.Dialer
+	username string
+	password string
 }
 
-func NewSocksProxy(dialer netutil.Dialer, addr, username, password string) (p *SocksProxy) {
+func NewSocksProxy(dialer netutil.Dialer, username, password string) (p *SocksProxy) {
 	p = &SocksProxy{
-		dialer:     dialer,
-		listenaddr: addr,
-		username:   username,
-		password:   password,
+		dialer:   dialer,
+		username: username,
+		password: password,
 	}
 	if username != "" && password != "" {
 		logger.Info("socks5 proxy auth required")
@@ -180,9 +178,9 @@ func NewSocksProxy(dialer netutil.Dialer, addr, username, password string) (p *S
 	return
 }
 
-func (p *SocksProxy) Start() {
-	logger.Infof("socks start in %s", p.listenaddr)
-	go netutil.ListenAndServe("tcp", p.listenaddr, p.ServeConn)
+func (p *SocksProxy) Start(addr string) {
+	logger.Infof("socks start in %s", addr)
+	go netutil.ListenAndServe("tcp", addr, p.ServeConn)
 }
 
 func (p *SocksProxy) ServeConn(conn net.Conn) {

@@ -28,6 +28,7 @@ type HttpProxy struct {
 	dialer    netutil.Dialer
 	username  string
 	password  string
+	Handler   http.Handler
 }
 
 func NewHttpProxy(dialer netutil.Dialer, username string, password string) (p *HttpProxy) {
@@ -41,6 +42,11 @@ func NewHttpProxy(dialer netutil.Dialer, username string, password string) (p *H
 		logger.Info("http proxy auth required")
 	}
 	return
+}
+
+func (p *HttpProxy) Start(addr string) {
+	logger.Infof("http start in %s", addr)
+	go http.ListenAndServe(addr, p)
 }
 
 func copyHeader(dst, src http.Header) {
@@ -84,6 +90,12 @@ func (p *HttpProxy) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	if req.Method == "CONNECT" {
 		p.Connect(w, req)
+		return
+	}
+
+	if p.Handler != nil && req.URL.Scheme == "" && req.URL.Host == "" {
+		logger.Infof("http mux req url: %s", req.URL.Path)
+		p.Handler.ServeHTTP(w, req)
 		return
 	}
 
