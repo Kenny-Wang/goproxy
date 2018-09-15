@@ -158,6 +158,7 @@ client模式运行在本地，需要一个境外的server服务器做支撑，�
 * socks: socks5代理的监听地址。留空表示不启动。
 * socksuser: 客户端访问此socks5代理服务时的用户名。留空表示无需验证客户身份。
 * sockspassword: 客户端访问此socks5代理服务时的密码。
+* transparent: 透明代理的监听地址。留空表示不启动透明代理。
 * portmaps: 端口映射配置，将本地端口映射到远程任意一个端口。
 * dnsserver: 一个UDP端口。在此端口提供dns服务。服务会通过dnsnet里设定的模式去查询。此功能尚未提供。
 

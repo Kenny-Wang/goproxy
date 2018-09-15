@@ -40,6 +40,7 @@ type ClientConfig struct {
 	Socks         string
 	SocksUser     string
 	SocksPassword string
+	Transparent   string
 
 	Portmaps  []portmapper.PortMap
 	DnsServer string
@@ -139,6 +140,11 @@ func RunClientProxy(cfg *ClientConfig) (err error) {
 
 	if cfg.Socks != "" {
 		p := proxy.NewSocksProxy(dialer, cfg.Socks, cfg.SocksUser, cfg.SocksPassword)
+		p.Start()
+	}
+
+	if cfg.Transparent != "" {
+		p := proxy.NewTransparentProxy(dialer, cfg.Transparent)
 		p.Start()
 	}
 
