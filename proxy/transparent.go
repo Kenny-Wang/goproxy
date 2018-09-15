@@ -32,6 +32,7 @@ func (tproxy *TransparentProxy) Start() {
 func (tproxy *TransparentProxy) ServeConn(conn net.Conn) {
 	var err error
 	defer conn.Close()
+	logger.Debugf("connected from %s", conn.RemoteAddr())
 
 	var rawconn syscall.RawConn
 
@@ -40,6 +41,9 @@ func (tproxy *TransparentProxy) ServeConn(conn net.Conn) {
 		rawconn, err = tconn.SyscallConn()
 	case *net.UDPConn:
 		rawconn, err = tconn.SyscallConn()
+	default:
+		logger.Error("unknown protocol")
+		return
 	}
 	if err != nil {
 		logger.Error(err.Error())
@@ -65,7 +69,7 @@ func (tproxy *TransparentProxy) ServeConn(conn net.Conn) {
 		logger.Error(err.Error())
 		return
 	}
-	logger.Debugf("transparent connect to %s", str_addr)
+	logger.Debugf("connect to %s", str_addr)
 
 	dstconn, err := tproxy.dialer.Dial("tcp", str_addr)
 	if err != nil {
