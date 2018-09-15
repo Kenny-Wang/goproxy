@@ -2,7 +2,6 @@ package main
 
 import (
 	"net"
-	"net/http"
 	"strings"
 
 	"github.com/shell909090/goproxy/connpool"
@@ -14,6 +13,7 @@ import (
 type ServerConfig struct {
 	Config
 	CryptMode   string
+	Listen      string
 	RootCAs     string
 	CertFile    string
 	CertKeyFile string
@@ -21,6 +21,9 @@ type ServerConfig struct {
 	Cipher      string
 	Key         string
 	Auth        map[string]string
+	Admin       string
+	AdminUser   string
+	AdminPwd    string
 }
 
 func LoadServerConfig(basecfg *Config) (cfg *ServerConfig, err error) {
@@ -63,10 +66,10 @@ func RunServer(cfg *ServerConfig) (err error) {
 
 	server := connpool.NewServer(&cfg.Auth)
 
-	if cfg.AdminIface != "" {
-		mux := http.NewServeMux()
-		server.Register(mux)
-		go httpserver(cfg.AdminIface, mux)
+	if cfg.Admin != "" {
+		handler := MakeAdminHandler(
+			server.Pool, cfg.AdminUser, cfg.AdminPwd)
+		go HttpListenAndServer(cfg.Admin, handler)
 	}
 
 	return server.Serve(listener)

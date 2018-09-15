@@ -33,9 +33,9 @@ func TestGoproxy(t *testing.T) {
 		Config: Config{
 			Mode:     "server",
 			Loglevel: "WARNING",
-			Listen:   "127.0.0.1:5233",
 		},
 		CryptMode:   "tls",
+		Listen:      "127.0.0.1:5233",
 		RootCAs:     AbsPath("../keys/ca.crt"),
 		CertFile:    AbsPath("../keys/localhost.crt"),
 		CertKeyFile: AbsPath("../keys/localhost.key"),
@@ -51,12 +51,12 @@ func TestGoproxy(t *testing.T) {
 
 	clicfg := ClientConfig{
 		Config: Config{
-			Mode:       "http",
-			Listen:     "127.0.0.1:5234",
-			Loglevel:   "WARNING",
-			AdminIface: "127.0.0.1:5235",
-			DnsNet:     "internal",
+			Mode:     "http",
+			Loglevel: "WARNING",
+			DnsNet:   "internal",
 		},
+		Http:         "127.0.0.1:5234",
+		Admin:        "127.0.0.1:5235",
 		DnsServer:    "127.0.0.1:5236",
 		DirectRoutes: AbsPath("../debian/routes.list.gz"),
 	}

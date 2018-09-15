@@ -12,8 +12,6 @@ import (
 	"github.com/shell909090/goproxy/dns"
 )
 
-var logger = logging.MustGetLogger("")
-
 var (
 	ErrConfig = errors.New("config error")
 )
@@ -23,12 +21,10 @@ var (
 )
 
 type Config struct {
-	Mode   string
-	Listen string
+	Mode string
 
-	Logfile    string
-	Loglevel   string
-	AdminIface string
+	Logfile  string
+	Loglevel string
 
 	DnsAddrs []string
 	DnsNet   string
