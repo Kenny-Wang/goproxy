@@ -22,11 +22,3 @@ func (s *ServeFile) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 }
-
-var DEFAULT_PAC = `
-abcdef
-`
-
-func NewDefaultPAC() (s *ServeFile) {
-	return NewServeFile([]byte(DEFAULT_PAC))
-}

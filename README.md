@@ -23,6 +23,7 @@
   * [Certification Config and Test](#certification-config-and-test)
   * [File Permission](#file-permission)
   * [Admin Interface](#admin-interface)
+  * [PAC file](#pac-file)
 * [Compile](#compile)
   * [Compile Binary](#compile-binary)
   * [Compile Tar](#compile-Tar)
@@ -125,7 +126,9 @@ deb包中，主程序在/usr/bin下，路由表文件会被安装到/usr/share/g
 * cipher: 加密算法，只在PSK模式下生效。可以为aes/des/tripledes，默认aes。
 * key: 密钥，只在PSK模式下生效。16个随机数据base64后的结果，客户端必须严格匹配方能通讯。
 * auth: dict类型。认证用户名/密码对。不设定表示不验证用户。
-* admin: 管理service，可以看到服务器端有多少个连接，分别是谁。为空表示不启动。不留listen会报错。
+* admin: 管理service，可以看到服务器端有多少个连接，分别是谁。此处为监听地址，为空表示不启动。
+* adminuser: 管理service的用户名。用户名密码之一留空表示不验证身份。
+* adminpwd: 管理service的密码。无论是独立端口还是复用端口，验证身份都是同一套
 
 其中service定义如下：
 
@@ -141,7 +144,7 @@ deb包中，主程序在/usr/bin下，路由表文件会被安装到/usr/share/g
 	 
 		"logfile": "",
 		"loglevel": "WARNING",
-		"adminiface": "127.0.0.1:5234"
+		"admin": "127.0.0.1:5234"
 
 	    "forceipv4": true,
 	    "cryptmode": "tls",
@@ -159,18 +162,20 @@ client模式运行在本地，需要一个境外的server服务器做支撑，�
 * minsess: 最小session数，默认为1。
 * maxconn: 一个session的最大connection数，超过这个数值会启动新session。默认为64。
 * servers: 服务器列表。
-* http: http service，为空表示不启动。
-* admin: 管理service，为空表示不启动。注意，留listen表示启动在独立端口上，不留listen表示混合在http端口上。后者要求http协议开放。
-* socks5: socks5 service，为空表示不启动。
+* http: http service的监听地址，为空表示不启动。
+* httpuser: http service的用户名。用户名密码之一留空表示不验证身份。
+* httppwd: http service的密码。
+* pacfile: 一个pac文件。
+* admin: 独立端口的管理service的监听地址，为空表示不启动。
+* httpadmin: 管理service和http service复用一个地址。0表示不启动，其他表示启动。默认不启动。
+* adminuser: 管理service的用户名。用户名密码之一留空表示不验证身份。
+* adminpwd: 管理service的密码。无论是独立端口还是复用端口，验证身份都是同一套
+* socks: socks5 service的监听地址，为空表示不启动。
+* socksuser: socks5 service的用户名。用户名密码之一留空表示不验证身份。
+* sockspwd: socks5 service的密码。
 * transparent: 透明代理的监听地址。留空表示不启动透明代理。
 * portmaps: 端口映射配置，将本地端口映射到远程任意一个端口。
 * dnsserver: 一个UDP端口。在此端口提供dns服务。服务会通过dnsnet里设定的模式去查询。此功能尚未提供。
-
-其中service定义如下：
-
-* listen: service监听的地址。
-* user: 用户名。用户名密码之一留空表示不验证身份。
-* pwd: 密码。
 
 其中servers是一个列表，成员定义如下：
 
@@ -194,13 +199,16 @@ client模式运行在本地，需要一个境外的server服务器做支撑，�
 
 	{
 		"mode": "client",
-		"listen": ":5233",
-	 
 		"loglevel": "WARNING",
-		"adminiface": "127.0.0.1:5234"
-
 		"dnsnet": "internal",
 		"blackfile": "/usr/share/goproxy/routes.list.gz",
+
+	    "transparent": ":5231",
+	    "socks": ":5232",
+		"http": ":5233",
+		"httpadmin": 1,
+		"adminuser": "admin",
+		"adminpwd": "admin123",
 
         "servers": [
 		    {
@@ -250,6 +258,16 @@ CIDR style ip range definition is acceptable.
 goproxy可以使用nobody和nogroup作为启动用户和组。这是一个非常小权限的组，在系统内相对比较安全。
 
 但是在TLS模式下，goproxy需要读取证书文件。这些文件（尤其是key）出于安全理由，往往都指定为root读写，其他人没有权限。因此debian包往往在启动时直接制定用户使用root跑。如果你需要换回nobody，请修改/lib/systemd/system/goproxy.service，去掉注释。然后再用`systemctl daemon-reload`重新加载配置，用`systemctl restart goproxy`重启服务。
+
+## Admin Interface
+
+admin interface是一个管理界面。在server模式下，它需要一个独立端口运行。在client模式下，他可以运行在独立端口，或和http复用一个端口。
+
+## PAC file
+
+PAC是一个代理服务器的配置文件。这个文件可以在http的代理端口访问到。
+
+例如http代理工作在本地的5233端口，那么pac文件就在[http://127.0.0.1:5233/pac.json](http://127.0.0.1:5233/pac.json)。默认的PAC会自动将http proxy和socks5 proxy的监听路径填写进去。但如果使用泛地址监听，例如`0.0.0.0:5233`或`:5233`，那么PAC文件将会出错。我们建议您手工配置PAC文件，以取得比较好的结果。
 
 # Compile
 

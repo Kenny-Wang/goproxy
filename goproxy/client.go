@@ -48,9 +48,17 @@ type ClientConfig struct {
 	MaxConn int
 	Servers []*ServerDefine
 
-	Http        *Service
-	Admin       *Service
-	Socks       *Service
+	Http        string
+	HttpUser    string
+	HttpPwd     string
+	PACFile     string
+	Admin       string
+	HttpAdmin   int
+	AdminUser   string
+	AdminPwd    string
+	Socks       string
+	SocksUser   string
+	SocksPwd    string
 	Transparent string
 
 	Portmaps  []portmapper.PortMap
@@ -109,16 +117,16 @@ func MakeFilteredDialer(dialer netutil.Dialer, cfg *ClientConfig) (fdialer *ipfi
 func RunClientProxy(cfg *ClientConfig) (err error) {
 	var dialer netutil.Dialer
 
-	if cfg.Http == nil && cfg.Socks == nil && cfg.Transparent == "" {
+	if cfg.Http == "" && cfg.Socks == "" && cfg.Transparent == "" {
 		logger.Critical("You don't wanna run any client mode. I quit.")
 		return
 	}
 
-	pool, err := MakeDialer(cfg)
+	pooldialer, err := MakeDialer(cfg)
 	if err != nil {
 		return
 	}
-	dialer = pool
+	dialer = pooldialer
 
 	if cfg.DnsNet == "internal" {
 		dns.DefaultResolver = dns.NewTcpClient(dialer)
@@ -140,9 +148,9 @@ func RunClientProxy(cfg *ClientConfig) (err error) {
 		go RunDnsServer(cfg.DnsServer)
 	}
 
-	if cfg.Socks != nil {
-		p := proxy.NewSocksProxy(dialer, cfg.Socks.User, cfg.Socks.Pwd)
-		p.Start(cfg.Socks.Listen)
+	if cfg.Socks != "" {
+		p := proxy.NewSocksProxy(dialer, cfg.SocksUser, cfg.SocksPwd)
+		p.Start(cfg.Socks)
 	}
 
 	if cfg.Transparent != "" {
@@ -150,26 +158,36 @@ func RunClientProxy(cfg *ClientConfig) (err error) {
 		p.Start(cfg.Transparent)
 	}
 
-	if cfg.Admin != nil && cfg.Admin.Listen != "" {
-		handler := MakeAdminHandler(pool, cfg.Admin.User, cfg.Admin.Pwd)
-		go HttpListenAndServer(cfg.Admin.Listen, handler)
+	if cfg.Admin != "" {
+		handler := MakeAdminHandler(
+			pooldialer.Pool, cfg.AdminUser, cfg.AdminPwd)
+		go HttpListenAndServer(cfg.Admin, handler)
 	}
 
-	var httpproxy *proxy.HttpProxy
-	if cfg.Http != nil {
-		httpproxy = proxy.NewHttpProxy(dialer, cfg.Http.User, cfg.Http.Pwd)
+	if cfg.Http != "" {
+		httpproxy := proxy.NewHttpProxy(dialer, cfg.HttpUser, cfg.HttpPwd)
 
-		if cfg.Admin != nil && cfg.Admin.Listen == "" {
+		if cfg.HttpAdmin != 0 {
 			httpproxy.Handler = MakeAdminHandler(
-				pool, cfg.Admin.User, cfg.Admin.Pwd)
+				pooldialer.Pool, cfg.AdminUser, cfg.AdminPwd)
 		}
 
 		mux := http.NewServeMux()
-		mux.Handle("/pac.json", proxy.NewDefaultPAC())
-		mux.Handle("/", httpproxy.Handler)
+
+		var pac http.Handler
+		pac, err = CreatePAC(cfg)
+		if err != nil {
+			logger.Error(err.Error())
+			return
+		}
+		mux.Handle("/pac.json", pac)
+
+		if httpproxy.Handler != nil {
+			mux.Handle("/", httpproxy.Handler)
+		}
 		httpproxy.Handler = mux
 
-		httpproxy.Start(cfg.Http.Listen)
+		httpproxy.Start(cfg.Http)
 	}
 	select {}
 	return

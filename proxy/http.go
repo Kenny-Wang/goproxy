@@ -11,6 +11,25 @@ import (
 
 var logger = logging.MustGetLogger("logger")
 
+type LocalDispatcher struct {
+	local  http.Handler
+	remote http.Handler
+}
+
+func (l *LocalDispatcher) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	defer req.Body.Close()
+	if req.URL.Host != "" {
+		l.remote.ServeHTTP(w, req)
+		return
+	}
+	if l.local == nil {
+		logger.Infof("no local handler.")
+		return
+	}
+	l.local.ServeHTTP(w, req)
+	return
+}
+
 var hopHeaders = []string{
 	"Connection",
 	"Keep-Alive",
@@ -45,11 +64,17 @@ func NewHttpProxy(dialer netutil.Dialer, user, pwd string) (p *HttpProxy) {
 
 func (p *HttpProxy) Start(addr string) {
 	logger.Infof("http start in %s", addr)
+	var handler http.Handler
 	if p.Auth == nil {
-		go http.ListenAndServe(addr, p)
+		handler = p
 	} else {
-		go http.ListenAndServe(addr, p.Auth)
+		handler = p.Auth
 	}
+	handler = &LocalDispatcher{
+		local:  p.Handler,
+		remote: handler,
+	}
+	go http.ListenAndServe(addr, handler)
 }
 
 func copyHeader(dst, src http.Header) {
@@ -61,16 +86,21 @@ func copyHeader(dst, src http.Header) {
 }
 
 func (p *HttpProxy) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	defer req.Body.Close()
 	logger.Infof("http: %s %s", req.Method, req.URL)
+
+	// if req.URL.Host == "" {
+	// 	if p.Handler == nil {
+	// 		logger.Infof("http server with no handler.")
+	// 		return
+	// 	}
+	// 	logger.Infof("http mux req url: %s", req.URL.Path)
+	// 	p.Handler.ServeHTTP(w, req)
+	// 	return
+	// }
 
 	if req.Method == "CONNECT" {
 		p.Connect(w, req)
-		return
-	}
-
-	if p.Handler != nil && req.URL.Scheme == "" && req.URL.Host == "" {
-		logger.Infof("http mux req url: %s", req.URL.Path)
-		p.Handler.ServeHTTP(w, req)
 		return
 	}
 

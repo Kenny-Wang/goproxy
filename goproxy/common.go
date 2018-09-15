@@ -10,12 +10,6 @@ import (
 
 var logger = logging.MustGetLogger("")
 
-type Service struct {
-	Listen string
-	User   string
-	Pwd    string
-}
-
 func HttpListenAndServer(addr string, handler http.Handler) {
 	for {
 		err := http.ListenAndServe(addr, handler)
@@ -26,7 +20,7 @@ func HttpListenAndServer(addr string, handler http.Handler) {
 	}
 }
 
-func MakeAdminHandler(pool *connpool.Dialer, user, pwd string) (handler http.Handler) {
+func MakeAdminHandler(pool *connpool.Pool, user, pwd string) (handler http.Handler) {
 	mux := http.NewServeMux()
 	pool.Register(mux)
 	if user != "" && pwd != "" {
