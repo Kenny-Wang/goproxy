@@ -89,16 +89,6 @@ func (p *HttpProxy) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	defer req.Body.Close()
 	logger.Infof("http: %s %s", req.Method, req.URL)
 
-	// if req.URL.Host == "" {
-	// 	if p.Handler == nil {
-	// 		logger.Infof("http server with no handler.")
-	// 		return
-	// 	}
-	// 	logger.Infof("http mux req url: %s", req.URL.Path)
-	// 	p.Handler.ServeHTTP(w, req)
-	// 	return
-	// }
-
 	if req.Method == "CONNECT" {
 		p.Connect(w, req)
 		return

@@ -132,16 +132,16 @@ func RunClientProxy(cfg *ClientConfig) (err error) {
 		dns.DefaultResolver = dns.NewTcpClient(dialer)
 	}
 
+	// FIXME: port mapper?
+	for _, pm := range cfg.Portmaps {
+		portmapper.CreatePortmap(pm, dialer)
+	}
+
 	if cfg.DirectRoutes != "" || cfg.ProhibitedRoutes != "" {
 		dialer, err = MakeFilteredDialer(dialer, cfg)
 		if err != nil {
 			return
 		}
-	}
-
-	// FIXME: port mapper?
-	for _, pm := range cfg.Portmaps {
-		go portmapper.CreatePortmap(pm, dialer)
 	}
 
 	if cfg.DnsServer != "" {

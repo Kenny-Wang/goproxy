@@ -231,7 +231,9 @@ CIDR style ip range definition is acceptable.
 
 通过portmaps项，可以将本地的tcp/udp端口转发到远程任意端口。
 
-注意：尚未测试。
+注意：UDP尚未测试。
+
+注意：映射时会直接使用远程地址，不会遵循Prohibited Routes/Direct Routes的限制。
 
 ## Key Generation
 

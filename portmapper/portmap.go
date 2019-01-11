@@ -219,7 +219,7 @@ func TcpPortmap(pm PortMap, dialer netutil.Dialer) (err error) {
 	if err != nil {
 		return
 	}
-	logger.Info("tcp listening in %s", pm.Src)
+	logger.Infof("tcp listening in %s", pm.Src)
 
 	for {
 		var sconn, dconn net.Conn
@@ -228,7 +228,7 @@ func TcpPortmap(pm PortMap, dialer netutil.Dialer) (err error) {
 		if err != nil {
 			continue
 		}
-		logger.Info("accept in %s:%s, try to dial %s.", pm.Net, pm.Src, pm.Dst)
+		logger.Infof("accept in %s:%s, try to dial %s.", pm.Net, pm.Src, pm.Dst)
 
 		dconn, err = dialer.Dial(pm.Net, pm.Dst)
 		if err != nil {
@@ -241,15 +241,22 @@ func TcpPortmap(pm PortMap, dialer netutil.Dialer) (err error) {
 }
 
 func CreatePortmap(pm PortMap, dialer netutil.Dialer) {
-	var err error
-	if strings.HasPrefix(pm.Net, "udp") {
+	switch {
+	case strings.HasPrefix(pm.Net, "udp"):
 		upm := NewUdpPortMapper()
-		err = upm.UdpPortmap(pm, dialer)
-	} else {
-		err = TcpPortmap(pm, dialer)
-	}
-	if err != nil {
-		logger.Error("%s", err.Error())
+		go func() {
+			err := upm.UdpPortmap(pm, dialer)
+			if err != nil {
+				logger.Error("%s", err.Error())
+			}
+		}()
+	case strings.HasPrefix(pm.Net, "tcp"):
+		go func() {
+			err := TcpPortmap(pm, dialer)
+			if err != nil {
+				logger.Error("%s", err.Error())
+			}
+		}()
 	}
 	return
 }
