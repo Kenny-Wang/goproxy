@@ -1,3 +1,11 @@
+goproxy (3.0.4) unstable; urgency=medium
+
+  * fix nil pointer issue
+  * change log output to format mode
+  * port map pass direct route/prohibited route
+
+ -- Shell.Xu <shell909090@gmail.com>  Sat, 19 Jan 2019 00:50:58 +0800
+
 goproxy (3.0.3) unstable; urgency=medium
 
   * add pac support.
