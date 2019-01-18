@@ -10,10 +10,14 @@ type DnsServer struct {
 }
 
 func (dnssrv *DnsServer) ServeDNS(w dns.ResponseWriter, quiz *dns.Msg) {
-	logger.Debugf("dns server query: %s", quiz.Question[0].Name)
+	logger.Infof("dns server query: %s", quiz.Question[0].Name)
 	resp, err := dnssrv.Exchanger.Exchange(quiz)
 	if err != nil {
 		logger.Error(err.Error())
+		return
+	}
+	if resp == nil {
+		logger.Error("response is nil.")
 		return
 	}
 
