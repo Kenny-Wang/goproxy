@@ -1,3 +1,13 @@
+goproxy (3.0.5) unstable; urgency=medium
+
+  * support server port range
+  * remove some cipher suite
+  * use conn creator to clarify code
+  * use vendor to compile whole project
+  * allow user to disable client-side cert auth
+
+ -- Shell.Xu <shell909090@gmail.com>  Sat, 16 Feb 2019 23:46:52 +0800
+
 goproxy (3.0.4) unstable; urgency=medium
 
   * fix nil pointer issue
