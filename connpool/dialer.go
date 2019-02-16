@@ -15,7 +15,7 @@ type Dialer struct {
 	MinSess  int
 	MaxConn  int
 	lock     sync.Mutex
-	creators []*tunnel.DialerCreator
+	creators []*tunnel.ClientCreator
 }
 
 func NewDialer(MinSess, MaxConn int) (dialer *Dialer) {
@@ -34,7 +34,7 @@ func NewDialer(MinSess, MaxConn int) (dialer *Dialer) {
 	return
 }
 
-func (dialer *Dialer) AddDialerCreator(orig *tunnel.DialerCreator) {
+func (dialer *Dialer) AddClientCreator(orig *tunnel.ClientCreator) {
 	dialer.lock.Lock()
 	defer dialer.lock.Unlock()
 	dialer.creators = append(dialer.creators, orig)

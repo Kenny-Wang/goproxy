@@ -1,6 +1,7 @@
 package main
 
 import (
+	"net"
 	"net/http"
 	"strings"
 
@@ -26,7 +27,9 @@ type ServerDefine struct {
 	Password    string
 }
 
-func (sd *ServerDefine) MakeDialer() (dialer netutil.Dialer, err error) {
+func (sd *ServerDefine) CreateConn() (conn net.Conn, err error) {
+	var dialer netutil.Dialer
+
 	if strings.ToLower(sd.CryptMode) == "tls" {
 		dialer, err = NewTlsDialer(sd.CertFile, sd.CertKeyFile, sd.RootCAs)
 	} else {
@@ -36,6 +39,14 @@ func (sd *ServerDefine) MakeDialer() (dialer netutil.Dialer, err error) {
 		}
 		dialer, err = cryptconn.NewDialer(netutil.DefaultTcpDialer, cipher, sd.Key)
 	}
+
+	logger.Noticef("try to connect %s.", sd.Server)
+	conn, err = dialer.Dial("tcp4", sd.Server)
+	if err != nil {
+		logger.Error(err.Error())
+		return
+	}
+
 	return
 }
 
@@ -78,16 +89,11 @@ func LoadClientConfig(basecfg *Config) (cfg *ClientConfig, err error) {
 }
 
 func MakeDialer(cfg *ClientConfig) (pooldialer *connpool.Dialer, err error) {
-	var dialer netutil.Dialer
 	pooldialer = connpool.NewDialer(cfg.MinSess, cfg.MaxConn)
 	for _, srv := range cfg.Servers {
-		dialer, err = srv.MakeDialer()
-		if err != nil {
-			return
-		}
-		creator := tunnel.NewDialerCreator(
-			dialer, "tcp4", srv.Server, srv.Username, srv.Password)
-		pooldialer.AddDialerCreator(creator)
+		creator := tunnel.NewClientCreator(
+			srv, srv.Username, srv.Password)
+		pooldialer.AddClientCreator(creator)
 	}
 	return
 }

@@ -84,3 +84,7 @@ func (fd *FalseDialer) DialTimeout(network, address string, timeout time.Duratio
 }
 
 var DefaultFalseDialer TimeoutDialer = &FalseDialer{}
+
+type ConnCreator interface {
+	CreateConn() (net.Conn, error)
+}

@@ -8,29 +8,24 @@ import (
 	"github.com/shell909090/goproxy/netutil"
 )
 
-type DialerCreator struct {
-	netutil.Dialer
-	network    string
-	serveraddr string
-	username   string
-	password   string
+type ClientCreator struct {
+	netutil.ConnCreator
+	username string
+	password string
 }
 
-func NewDialerCreator(raw netutil.Dialer, network, serveraddr, username, password string) (dc *DialerCreator) {
-	return &DialerCreator{
-		Dialer:     raw,
-		network:    network,
-		serveraddr: serveraddr,
-		username:   username,
-		password:   password,
+func NewClientCreator(creator netutil.ConnCreator, username, password string) (cc *ClientCreator) {
+	return &ClientCreator{
+		ConnCreator: creator,
+		username:    username,
+		password:    password,
 	}
 }
 
-func (dc *DialerCreator) Create() (client *Client, err error) {
-	logger.Noticef("msocks try to connect %s.", dc.serveraddr)
-
-	conn, err := dc.Dialer.Dial(dc.network, dc.serveraddr)
+func (cc *ClientCreator) Create() (client *Client, err error) {
+	conn, err := cc.ConnCreator.CreateConn()
 	if err != nil {
+		logger.Error(err.Error())
 		return
 	}
 
@@ -40,14 +35,14 @@ func (dc *DialerCreator) Create() (client *Client, err error) {
 	})
 	defer ti.Stop()
 
-	if dc.username != "" || dc.password != "" {
+	if cc.username != "" || cc.password != "" {
 		logger.Noticef("auth with username: %s, password: %s.",
-			dc.username, dc.password)
+			cc.username, cc.password)
 	}
 
 	auth := Auth{
-		Username: dc.username,
-		Password: dc.password,
+		Username: cc.username,
+		Password: cc.password,
 	}
 	err = WriteFrame(conn, MSG_AUTH, 0, &auth)
 	if err != nil {
