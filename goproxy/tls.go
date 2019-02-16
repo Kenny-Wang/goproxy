@@ -77,16 +77,19 @@ type TlsDialer struct {
 }
 
 func NewTlsDialer(CertFile, CertKeyFile, RootCAs string) (dialer netutil.Dialer, err error) {
-	cert, err := tls.LoadX509KeyPair(CertFile, CertKeyFile)
-	if err != nil {
-		return
-	}
-
 	config := &tls.Config{
-		Certificates:     []tls.Certificate{cert},
 		CipherSuites:     CipherSuites,
 		MinVersion:       tls.VersionTLS12,
 		CurvePreferences: CurvePreferences,
+	}
+
+	if CertFile != "" || CertKeyFile != "" {
+		var cert tls.Certificate
+		cert, err = tls.LoadX509KeyPair(CertFile, CertKeyFile)
+		if err != nil {
+			return
+		}
+		config.Certificates = []tls.Certificate{cert}
 	}
 
 	if RootCAs != "" {
