@@ -177,7 +177,7 @@ client模式运行在本地，需要一个境外的server服务器做支撑，�
 
 其中servers是一个列表，成员定义如下：
 
-* server: 中间代理服务器地址。
+* server: 中间代理服务器地址。端口部分可以使用范围，例如srv:1000-2000。服务器上用DNAT接收。
 * cryptmode: 字符串。tls表示使用tls模式，其他表示使用PSK模式。
 * rootcas: 字符串，只在tls模式下生效。以回车分割的多行字符串，每行一个文件路径，表示客户认可的服务器端ca根。不设定的话使用系统根证书设定。
 * certfile: 字符串，只在tls模式下生效。客户端使用的证书文件。不设定的话不使用客户端证书认证。
@@ -347,8 +347,4 @@ docker image的打包需要两个基础，已经编译好的bin/goproxy，和bus
 
 # TODO
 
-* Found out why connection always blocked.
 * Enable and Disable servers
-* 增加dns对外服务？
-* Encapsulate tcp into http.
-* Speed control, low speed go first?

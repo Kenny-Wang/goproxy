@@ -1,9 +1,12 @@
 package main
 
 import (
+	"math/rand"
 	"net"
 	"net/http"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/shell909090/goproxy/connpool"
 	"github.com/shell909090/goproxy/cryptconn"
@@ -27,6 +30,31 @@ type ServerDefine struct {
 	Password    string
 }
 
+func (sd *ServerDefine) GetServerAddr() (addr string, err error) {
+	host, port, err := net.SplitHostPort(sd.Server)
+	if err != nil {
+		return
+	}
+
+	if !strings.Contains(port, "-") {
+		return sd.Server, nil
+	}
+
+	rand.Seed(time.Now().UnixNano())
+	port_arr := strings.Split(port, "-")
+	low, err := strconv.Atoi(port_arr[0])
+	if err != nil {
+		return
+	}
+	high, err := strconv.Atoi(port_arr[1])
+	if err != nil {
+		return
+	}
+	port_n := low + rand.Intn(high-low)
+	addr = host + ":" + strconv.Itoa(port_n)
+	return
+}
+
 func (sd *ServerDefine) CreateConn() (conn net.Conn, err error) {
 	var dialer netutil.Dialer
 
@@ -40,8 +68,14 @@ func (sd *ServerDefine) CreateConn() (conn net.Conn, err error) {
 		dialer, err = cryptconn.NewDialer(netutil.DefaultTcpDialer, cipher, sd.Key)
 	}
 
-	logger.Noticef("try to connect %s.", sd.Server)
-	conn, err = dialer.Dial("tcp4", sd.Server)
+	addr, err := sd.GetServerAddr()
+	if err != nil {
+		logger.Error(err.Error())
+		return
+	}
+
+	logger.Noticef("try to connect %s.", addr)
+	conn, err = dialer.Dial("tcp4", addr)
 	if err != nil {
 		logger.Error(err.Error())
 		return
