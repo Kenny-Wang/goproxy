@@ -273,9 +273,7 @@ PAC是一个代理服务器的配置文件。这个文件可以在http的代理�
 
 ## Compile Binary
 
-编译二进制文件非常简单，直接`make build`就行。要求当前系统中有golang编译环境，golang版本高于1.8，并且所有依赖包都安装到位。
-
-依赖包可以使用`make download`来安装。注意http2的库安装时需要先翻墙。
+编译二进制文件非常简单，直接`make build`就行。要求当前系统中有golang编译环境，golang版本高于1.10。
 
 ## Compile Tar
 
@@ -293,7 +291,7 @@ tar为binary的延伸。里面包含主程序，config.json示例，routes.list.
 
 首先，需要生成编译环境镜像。执行指令`docker/gobuilder/build.sh`，会生成gobuilder这个image。如果你需要打包32位系统，请用gobuilder32。随后编译debian包。
 
-	sudo docker run --rm -v "$PWD":/srv/myapp/ -w /srv/myapp/ gobuilder make build-deb
+	sudo docker run --rm -v "$PWD":/srv/gocode/src/github.com/shell909090/goproxy -w /srv/gocode/src/github.com/shell909090/goproxy gobuilder make build-deb
 
 编译后的文件可以在debuild目录找到。注意，这里的文件权限可能是root。
 

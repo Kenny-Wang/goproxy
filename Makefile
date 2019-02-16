@@ -8,12 +8,8 @@ LEVEL=NOTICE
 
 all: clean build
 
-fullbuild: clean download build
-
-download:
-	go get -u -d github.com/miekg/dns
-	go get -u -d github.com/op/go-logging
-	go get -u -d golang.org/x/net/http2
+clean:
+	rm -rf bin pkg gopath debuild
 
 build:
 	mkdir -p gopath/src/github.com/shell909090/
@@ -21,18 +17,6 @@ build:
 	mkdir -p bin
 	GOPATH="$$PWD/gopath":"$$GOPATH" go build -o bin/goproxy github.com/shell909090/goproxy/goproxy
 	rm -rf gopath
-
-clean:
-	rm -rf bin pkg gopath debuild
-
-build-tar: build
-	strip bin/goproxy
-	tar cJf ../goproxy-`uname -m`.tar.xz bin/goproxy debian/config.json debian/routes.list.gz
-
-build-deb: download
-	dpkg-buildpackage
-	mkdir -p debuild
-	mv -f ../goproxy_* debuild
 
 test:
 	go test github.com/shell909090/goproxy/tunnel
@@ -47,5 +31,14 @@ install: build
 	install -m 644 debian/routes.list.gz $(DESTDIR)/usr/share/goproxy/
 	install -d $(DESTDIR)/etc/goproxy/
 	install -m 644 debian/config.json $(DESTDIR)/etc/goproxy/
+
+build-tar: build
+	strip bin/goproxy
+	tar cJf ../goproxy-`uname -m`.tar.xz bin/goproxy debian/config.json debian/routes.list.gz
+
+build-deb:
+	dpkg-buildpackage
+	mkdir -p debuild
+	mv -f ../goproxy_* debuild
 
 ### Makefile ends here
