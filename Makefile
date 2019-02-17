@@ -41,4 +41,17 @@ build-deb:
 	mkdir -p debuild
 	mv -f ../goproxy_* debuild
 
+# compile project with gobuilder and push them to docker.io
+build-docker:
+	sudo docker run --rm -v "$PWD":/srv/gocode/src/github.com/shell909090/goproxy -w /srv/gocode/src/github.com/shell909090/goproxy gobuilder make build
+	docker/goproxy/build.sh
+	sudo make clean
+	sudo docker tag goproxy shell909090/goproxy
+	sudo docker push shell909090/goproxy
+	sudo docker run --rm -v "$PWD":/srv/gocode/src/github.com/shell909090/goproxy -w /srv/gocode/src/github.com/shell909090/goproxy gobuilder32 make build
+	docker/goproxy32/build.sh
+	sudo make clean
+	sudo docker tag goproxy32 shell909090/goproxy32
+	sudo docker push shell909090/goproxy32
+
 ### Makefile ends here
