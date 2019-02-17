@@ -88,3 +88,19 @@ var DefaultFalseDialer TimeoutDialer = &FalseDialer{}
 type ConnCreator interface {
 	CreateConn() (net.Conn, error)
 }
+
+type TcpConnCreator struct {
+	network string
+	address string
+}
+
+func NewTcpConnCreator(net, addr string) (creator ConnCreator) {
+	return &TcpConnCreator{
+		network: net,
+		address: addr,
+	}
+}
+
+func (tcc *TcpConnCreator) CreateConn() (conn net.Conn, err error) {
+	return DefaultTcpDialer.Dial(tcc.network, tcc.address)
+}

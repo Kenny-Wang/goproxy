@@ -101,7 +101,8 @@ func TestTunnel(t *testing.T) {
 	}()
 	wg.Wait()
 
-	dc := NewClientCreator(netutil.DefaultTcpDialer, "tcp4", "127.0.0.1:14755", "", "")
+	dc := NewClientCreator(
+		netutil.NewTcpConnCreator("tcp4", "127.0.0.1:14755"), "", "")
 
 	client, err := dc.Create()
 	if err != nil {
